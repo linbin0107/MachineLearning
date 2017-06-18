@@ -1,4 +1,4 @@
-# MachineLearning
+# Machine Learning Algorithms
 
 This repo includes six classical machine learning algorithms, such as 
 Perceptrons, Neural Networks, SVMs and feature selection, Bayesian learning
