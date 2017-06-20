@@ -17,19 +17,19 @@ class SVM :
   def __init__(self, data_f):
     self.data_f = data_f
 
-  def training(self):
-    # Preprocessing data
-    train_data, test_data = self.preprocessData()
+  # Exp 1. Training SVM model
+  def training(self, train_dat, test_data):
     self.save2File(train_data, test_data)
 
-    # 1. Training SVM model
     subprocess.call('./svm_learn train.data svm_model', shell = True)
     subprocess.call('./svm_classify test.data svm_model output > svm_exp1', shell = True)
 
     self.plotROC()
 
-    # 2. Feature selection with linear SVM
-    # Get weight vector using the perl script
+
+  # Exp 2. Feature selection with linear SVM
+  # Get weight vector using the perl script
+  def selectFeatures(self, train_data, test_data):
     subprocess.call('perl svm2weight.pl svm_model >> weights', shell = True)
 
     for i in range(2, 58):
@@ -40,6 +40,28 @@ class SVM :
 
     accu = self.readAccuracy('svm_exp2')
     self.plotAccuracy(range(2, 58), accu, 'featureAccu.pdf')
+
+
+  # Exp 3. Select features randomly
+  def selectFeaturesRandom(self, train_data, test_data):
+    for i in range(2, 58):
+      n_train, n_test = self.randomFeatureSelector(i, train_data, test_data)
+      self.save2File(n_train, n_test)
+      subprocess.call('./svm_learn train.data f_svm_model', shell = True)
+      subprocess.call('./svm_classify test.data f_svm_model output >> svm_exp3', shell = True)
+
+    accu = self.readAccuracy('svm_exp3')
+    self.plotAccuracy(range(2, 58), accu, 'randomAccu.pdf')
+
+
+  def randomFeatureSelector(self, i, train_data, test_data):
+    # Randomly select 57 - i features to be deleted
+    indList = random.sample(xrange(1, 58), 57 - i)
+
+    n_train = np.delete(train_data, indList, 1)
+    n_test = np.delete(test_data, indList, 1)
+
+    return n_train, n_test
 
 
   def readAccuracy(self, resFile):
@@ -60,7 +82,7 @@ class SVM :
     plt.ylim([50, 100])
     plt.xlabel('Number of features')
     plt.ylabel('Accuracy')
-    plt.title('Accuracy v.s. n')
+    plt.title('Accuracy v.s. number of features')
     plt.savefig(name)
     plt.clf()
 
@@ -146,12 +168,22 @@ class SVM :
     wtsSorted = sorted(wts.items(), key = operator.itemgetter(1), reverse = True)
 
     indList = [e[0] for e in wtsSorted[i:]]
-    n_train = np.delete(train_data, indList, axis = 1)
-    n_test = np.delete(test_data, indList, axis = 1)
+    n_train = np.delete(train_data, indList, 1)
+    n_test = np.delete(test_data, indList, 1)
 
     return n_train, n_test
 
 
+  def clean(self):
+    subprocess.call('rm randomAccu.pdf train.data svm_model svm_exp* test.data test.class \
+      featureAccu.pdf roc_curve.pdf f_svm_model output weights', shell = True)
+
+
 if __name__== "__main__":
   svm = SVM('spambase.data')
-  svm.training()
+  svm.clean()
+  # Preprocessing data
+  train_data, test_data = svm.preprocessData()
+  svm.training(train_data, test_data)
+  svm.selectFeatures(train_data, test_data)
+  svm.selectFeaturesRandom(train_data, test_data)
