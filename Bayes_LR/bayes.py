@@ -4,16 +4,14 @@
    and logistic regression.'''
 
 import numpy as np
-from sklearn import preprocessing
-from sklearn import metrics
 from sklearn.linear_model import LogisticRegression
 import matplotlib.pyplot as plt
-import re
 
 
 class BayesLearning:
   def __init__(self, data_f):
     self.data_f = data_f
+
 
   # Create probabilistic model for train data
   def createModel(self, train_data, train_class):
@@ -90,7 +88,6 @@ class BayesLearning:
     self.createConMatrix(fp, fn, tp, tn, 'BayesConMatrix')
 
 
-
   # Classification with Logitstic Regression using scikit_learn library
   def logisticRegression(self, train_data, train_class, test_data, test_class):
     model = LogisticRegression()
@@ -151,7 +148,6 @@ class BayesLearning:
     return fp, fn, tp, tn
 
 
-
   def preprocessData(self):
     data = np.genfromtxt(self.data_f, delimiter = ',')
     # Split data into two halves, one for trainging and the other for test
@@ -171,16 +167,13 @@ class BayesLearning:
     return train_data, test_data, train_class, test_class
 
 
-
-  def clean(self):
-    subprocess.call('rm randomAccu.pdf train.data svm_model svm_exp* test.data test.class \
-      featureAccu.pdf roc_curve.pdf f_svm_model output weights', shell = True)
-
-
 if __name__== "__main__":
   bayes = BayesLearning('spambase.data')
   # Preprocessing data
   train_data, test_data, train_class, test_class = bayes.preprocessData()
+  # Create probabilistic model
   pos_mean, pos_stdev, pos_cnt, neg_mean, neg_stdev, neg_cnt = bayes.createModel(train_data, train_class)
+  # Run naive Bayes classification
   bayes.runNaiveBayes(pos_mean, pos_stdev, pos_cnt, neg_mean, neg_stdev, neg_cnt, test_data, test_class)
+  # Run logistic regression classification
   bayes.logisticRegression(train_data, train_class, test_data, test_class)
